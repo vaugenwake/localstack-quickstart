@@ -1,0 +1,4 @@
+connection:
+  protocol: http
+  endpoint: localstack
+  port: 4566
