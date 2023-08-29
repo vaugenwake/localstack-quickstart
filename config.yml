@@ -7,6 +7,9 @@ resources:
   my-bucket:
     type: s3
     options:
-      name: vaugens-bucket
-      public: false
-      encrypted: true
+      name: bucket
+  my-queue:
+    type: sqs
+    options:
+      name: queue-name
+      dead_letter: true

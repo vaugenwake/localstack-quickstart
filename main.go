@@ -3,18 +3,18 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
+	"localstack-quickstart/exec"
 	"os"
 	"time"
 
 	"localstack-quickstart/config"
+	"localstack-quickstart/errors"
 	"localstack-quickstart/inputs"
-	"localstack-quickstart/validation"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/jedib0t/go-pretty/v6/table"
+	"github.com/jedib0t/go-pretty/table"
 )
 
 func connectToAws(config *config.Config) (*session.Session, error) {
@@ -57,27 +57,37 @@ func checkHealthy(sess *session.Session) bool {
 
 func main() {
 
+	errorCollecter := &errors.ErrorsBag{}
+
 	inputs, err := inputs.ParseInputFlags()
 	if err != nil {
 		panic("Inputs failer")
 	}
 
-	config, err := config.ParseConfigFile(inputs.ConfigFile)
+	parsedConfig, err := config.ParseConfigFile(inputs.ConfigFile)
 	if err != nil {
-		log.Fatalf("Failed to parse config: %v", err)
+		errorCollecter.Add("Fatal", err.Error())
 	}
 
-	validator := &validation.ValidationReport{}
-	validator.ValidateResources(&config.Resources)
+	executor := &exec.ExecutionPlan{}
+	err = executor.Plan(&parsedConfig.Resources)
+	if err != nil {
+		errorCollecter.Add("Fatal", err.Error())
+	}
 
-	if validator.HasErrors() {
+	err = executor.Exec()
+	if err != nil {
+		errorCollecter.Add("Fatal", err.Error())
+	}
+
+	if errorCollecter.Any() {
 		t := table.NewWriter()
-		t.SetTitle("Scheme validation errors")
+		t.SetTitle("Execution Errors")
 
-		t.AppendHeader(table.Row{"#", "Field", "Error"})
+		t.AppendHeader(table.Row{"#", "Level", "Error"})
 
-		for idx, err := range validator.AllErrors() {
-			t.AppendRow(table.Row{idx, err.Field, err.Message})
+		for idx, err := range errorCollecter.All() {
+			t.AppendRow(table.Row{idx, err.Level, err.Message})
 		}
 
 		fmt.Println(t.Render())

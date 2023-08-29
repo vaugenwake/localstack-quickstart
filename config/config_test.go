@@ -45,7 +45,7 @@ func TestCanParseConfig(t *testing.T) {
 			result, err := ParseConfigFile(stub)
 
 			if test.expectError && err == nil {
-				t.Errorf("Expected error, got none: %v", test.name)
+				assert.Error(err)
 				return
 			}
 
@@ -68,4 +68,17 @@ func TestCanBuildEndpoint(t *testing.T) {
 	}
 
 	assert.Equal("http://localstack-test:4566", result.GetEndpoint())
+}
+
+func TestCanMarshalOptionsTypeForResource(t *testing.T) {
+	assert := assert.New(t)
+
+	stub := getStubPath("valid_config.yml")
+
+	result, err := ParseConfigFile(stub)
+	if err != nil {
+		t.Errorf("Unexpected error: %v", err)
+	}
+
+	assert.IsType(S3Options{}, result.Resources["my-bucket"].Options)
 }
