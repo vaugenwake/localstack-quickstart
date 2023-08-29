@@ -1,7 +1,7 @@
 package config
 
 import (
-	"io/ioutil"
+	"os"
 	"strconv"
 
 	"gopkg.in/yaml.v2"
@@ -13,8 +13,14 @@ type Connection struct {
 	Port     int    `yaml:"port"`
 }
 
+type Resource struct {
+	Type    string      `yaml:"type"`
+	Options interface{} `yaml:"options"`
+}
+
 type Config struct {
-	Connection Connection `yaml:"connection"`
+	Connection Connection          `yaml:"connection"`
+	Resources  map[string]Resource `yaml:"resources"`
 }
 
 func (c *Config) GetEndpoint() string {
@@ -22,7 +28,7 @@ func (c *Config) GetEndpoint() string {
 }
 
 func ParseConfigFile(file string) (*Config, error) {
-	configFile, err := ioutil.ReadFile(file)
+	configFile, err := os.ReadFile(file)
 	if err != nil {
 		return nil, err
 	}

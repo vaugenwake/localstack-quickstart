@@ -2,3 +2,11 @@ connection:
   protocol: http
   endpoint: localstack
   port: 4566
+
+resources:
+  my-bucket:
+    type: s3
+    options:
+      name: vaugens-bucket
+      public: false
+      encrypted: true

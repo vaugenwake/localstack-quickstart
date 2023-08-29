@@ -1,0 +1,7 @@
+connection:
+  endpoint: localstack
+  port: 4566
+
+resources:
+  my-bucket: # Can be any name
+    foo: bar

@@ -25,7 +25,7 @@ func connectToAws(config *config.Config) (*session.Session, error) {
 
 	sess, err := session.NewSession(awsConfig)
 	if err != nil {
-		fmt.Println("Error setting up connection context: %v", err)
+		fmt.Printf("Error setting up connection context: %v", err)
 		return nil, err
 	}
 
@@ -83,7 +83,7 @@ func main() {
 
 	dynamoSrv := dynamodb.New(sess)
 
-	fmt.Println("Tables:\n")
+	fmt.Println("Tables:")
 
 	for {
 		result, err := dynamoSrv.ListTablesWithContext(ctx, &dynamodb.ListTablesInput{})

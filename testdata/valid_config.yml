@@ -1,0 +1,10 @@
+connection:
+  protocol: http
+  endpoint: localstack-test
+  port: 4566
+
+resources:
+  my-bucket: # Can be any name
+    type: s3 # Can be either s3/sqs
+    options: # are defined based on the type, example s3 type has a public property but sqs does not
+      name: test-bucket
