@@ -9,12 +9,12 @@ import (
 
 	"localstack-quickstart/config"
 	"localstack-quickstart/inputs"
+	"localstack-quickstart/validation"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/jedib0t/go-pretty/v6/table"
 )
 
 func connectToAws(config *config.Config) (*session.Session, error) {
@@ -67,48 +67,65 @@ func main() {
 		log.Fatalf("Failed to parse config: %v", err)
 	}
 
-	sess, err := connectToAws(config)
-	if err != nil {
-		fmt.Println(err)
+	validator := &validation.ValidationReport{}
+	validator.ValidateResources(&config.Resources)
+
+	if validator.HasErrors() {
+		t := table.NewWriter()
+		t.SetTitle("Scheme validation errors")
+
+		t.AppendHeader(table.Row{"#", "Field", "Error"})
+
+		for idx, err := range validator.AllErrors() {
+			t.AppendRow(table.Row{idx, err.Field, err.Message})
+		}
+
+		fmt.Println(t.Render())
 		os.Exit(1)
 	}
 
-	if !checkHealthy(sess) {
-		fmt.Println("Could not establish healthy connection to localstack service")
-		os.Exit(1)
-	}
+	// sess, err := connectToAws(config)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	os.Exit(1)
+	// }
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
+	// if !checkHealthy(sess) {
+	// 	fmt.Println("Could not establish healthy connection to localstack service")
+	// 	os.Exit(1)
+	// }
 
-	dynamoSrv := dynamodb.New(sess)
+	// ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	// defer cancel()
 
-	fmt.Println("Tables:")
+	// dynamoSrv := dynamodb.New(sess)
 
-	for {
-		result, err := dynamoSrv.ListTablesWithContext(ctx, &dynamodb.ListTablesInput{})
-		if err != nil {
-			if aerr, ok := err.(awserr.Error); ok {
-				switch aerr.Code() {
-				case dynamodb.ErrCodeInternalServerError:
-					fmt.Println(dynamodb.ErrCodeInternalServerError, aerr.Error())
-				default:
-					fmt.Println(aerr.Error())
-				}
-			} else {
-				// Print the error, cast err to awserr.Error to get the Code and
-				// Message from an error.
-				fmt.Println(err.Error())
-			}
-			return
-		}
+	// fmt.Println("Tables:")
 
-		for _, n := range result.TableNames {
-			fmt.Println(*n)
-		}
+	// for {
+	// 	result, err := dynamoSrv.ListTablesWithContext(ctx, &dynamodb.ListTablesInput{})
+	// 	if err != nil {
+	// 		if aerr, ok := err.(awserr.Error); ok {
+	// 			switch aerr.Code() {
+	// 			case dynamodb.ErrCodeInternalServerError:
+	// 				fmt.Println(dynamodb.ErrCodeInternalServerError, aerr.Error())
+	// 			default:
+	// 				fmt.Println(aerr.Error())
+	// 			}
+	// 		} else {
+	// 			// Print the error, cast err to awserr.Error to get the Code and
+	// 			// Message from an error.
+	// 			fmt.Println(err.Error())
+	// 		}
+	// 		return
+	// 	}
 
-		if result.LastEvaluatedTableName == nil {
-			break
-		}
-	}
+	// 	for _, n := range result.TableNames {
+	// 		fmt.Println(*n)
+	// 	}
+
+	// 	if result.LastEvaluatedTableName == nil {
+	// 		break
+	// 	}
+	// }
 }

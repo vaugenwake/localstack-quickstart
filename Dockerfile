@@ -1,4 +1,4 @@
-FROM golang:1.19.2-alpine3.16
+FROM golang:1.21.0-alpine3.17
 
 WORKDIR /app
 

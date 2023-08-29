@@ -7,6 +7,15 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+type ResourceType string
+
+const (
+	S3  ResourceType = "s3"
+	SQS ResourceType = "sqs"
+)
+
+type Resourses map[string]Resource
+
 type Connection struct {
 	Protocol string `yaml:"protocol"`
 	Endpoint string `yaml:"endpoint"`
@@ -14,13 +23,19 @@ type Connection struct {
 }
 
 type Resource struct {
-	Type    string      `yaml:"type"`
-	Options interface{} `yaml:"options"`
+	Type    ResourceType           `yaml:"type"`
+	Options map[string]interface{} `yaml:"options"`
 }
 
 type Config struct {
-	Connection Connection          `yaml:"connection"`
-	Resources  map[string]Resource `yaml:"resources"`
+	Connection Connection `yaml:"connection"`
+	Resources  Resourses  `yaml:"resources"`
+}
+
+type S3Options struct {
+	name      string
+	public    bool
+	encrypted bool
 }
 
 func (c *Config) GetEndpoint() string {
