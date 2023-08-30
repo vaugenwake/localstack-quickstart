@@ -1,5 +1,7 @@
 # Localstack Quickstart
 
+[![Go](https://github.com/vaugenwake/localstack-quickstart/actions/workflows/go.yml/badge.svg?branch=main)](https://github.com/vaugenwake/localstack-quickstart/actions/workflows/go.yml)
+
 ## WIP - Education Project
 This project may become an open project to be used but at this stage it is purely an educational project to learn GoLang.
 
