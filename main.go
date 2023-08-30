@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"localstack-quickstart/exec"
 	"os"
 	"time"
 
@@ -81,38 +82,38 @@ func main() {
 		panic("Inputs failer")
 	}
 
-	_, err = config.ParseConfigFile(inputs.ConfigFile)
+	parsedConfig, err := config.ParseConfigFile(inputs.ConfigFile)
 	if err != nil {
 		errorCollecter.Add("Fatal", err.Error())
 		printError(errorCollecter)
 		os.Exit(1)
 	}
 
-	//sess, err := connectToAws(parsedConfig)
-	//if err != nil {
-	//	errorCollecter.Add("Fatal", err.Error())
-	//	printError(errorCollecter)
-	//	os.Exit(1)
-	//}
-	//
-	//if !checkHealthy(sess) {
-	//	errorCollecter.Add("Fatal", "Could not connect to localstack, retry limit reached")
-	//	printError(errorCollecter)
-	//	os.Exit(1)
-	//}
-	//
-	//executor := &exec.ExecutionPlan{}
-	//
-	//err = executor.Plan(&parsedConfig.Resources, sess)
-	//if err != nil {
-	//	errorCollecter.Add("Fatal", err.Error())
-	//}
-	//
-	//err = executor.Exec()
-	//if err != nil {
-	//	errorCollecter.Add("Fatal", err.Error())
-	//}
-	//
-	//printError(errorCollecter)
-	//os.Exit(0)
+	sess, err := connectToAws(parsedConfig)
+	if err != nil {
+		errorCollecter.Add("Fatal", err.Error())
+		printError(errorCollecter)
+		os.Exit(1)
+	}
+
+	if !checkHealthy(sess) {
+		errorCollecter.Add("Fatal", "Could not connect to localstack, retry limit reached")
+		printError(errorCollecter)
+		os.Exit(1)
+	}
+
+	executor := &exec.ExecutionPlan{}
+
+	err = executor.Plan(&parsedConfig.Resources, sess)
+	if err != nil {
+		errorCollecter.Add("Fatal", err.Error())
+	}
+
+	err = executor.Exec()
+	if err != nil {
+		errorCollecter.Add("Fatal", err.Error())
+	}
+
+	printError(errorCollecter)
+	os.Exit(0)
 }
