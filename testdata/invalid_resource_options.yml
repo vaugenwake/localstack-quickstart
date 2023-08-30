@@ -7,9 +7,4 @@ resources:
   my-bucket:
     type: s3
     options:
-      name: test-bucket
-  my-queue:
-    type: sqs
-    options:
-      name: test-queue
-      dead_letter: false
+      bucket_name: test-bucket

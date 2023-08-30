@@ -14,11 +14,28 @@ func getStubPath(stub_name string) string {
 func TestCanParseConfig(t *testing.T) {
 	assert := assert.New(t)
 
+	validResources := map[string]Resource{
+		"my-bucket": {
+			Type: S3,
+			Options: S3Options{
+				Name: "test-bucket",
+			},
+		},
+		"my-queue": {
+			Type: SQS,
+			Options: SQSOptions{
+				Name:       "test-queue",
+				DeadLetter: false,
+			},
+		},
+	}
+
 	var tests = []struct {
 		name               string
 		stub               string
 		expectError        bool
 		expectedConnection Connection
+		expectedResources  map[string]Resource
 	}{
 		{
 			name:        "valid config",
@@ -29,12 +46,21 @@ func TestCanParseConfig(t *testing.T) {
 				Endpoint: "localstack-test",
 				Port:     4566,
 			},
+			expectedResources: validResources,
 		},
 		{
 			name:               "invalid config",
 			stub:               "invalid_config.yml",
 			expectError:        true,
 			expectedConnection: Connection{},
+			expectedResources:  map[string]Resource{},
+		},
+		{
+			name:               "invalid resource options",
+			stub:               "invalid_resource_options.yml",
+			expectError:        true,
+			expectedConnection: Connection{},
+			expectedResources:  map[string]Resource{},
 		},
 	}
 
@@ -51,6 +77,7 @@ func TestCanParseConfig(t *testing.T) {
 
 			if !test.expectError {
 				assert.Equal(test.expectedConnection, result.Connection)
+				assert.Equal(test.expectedResources, result.Resources)
 			}
 
 		})

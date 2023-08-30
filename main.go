@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"localstack-quickstart/exec"
 	"os"
 	"time"
 
@@ -82,69 +81,38 @@ func main() {
 		panic("Inputs failer")
 	}
 
-	parsedConfig, err := config.ParseConfigFile(inputs.ConfigFile)
+	_, err = config.ParseConfigFile(inputs.ConfigFile)
 	if err != nil {
 		errorCollecter.Add("Fatal", err.Error())
 		printError(errorCollecter)
 		os.Exit(1)
 	}
 
-	sess, err := connectToAws(parsedConfig)
-	if err != nil {
-		errorCollecter.Add("Fatal", err.Error())
-		printError(errorCollecter)
-		os.Exit(1)
-	}
-
-	if !checkHealthy(sess) {
-		errorCollecter.Add("Fatal", "Could not connect to localstack, retry limit reached")
-		printError(errorCollecter)
-		os.Exit(1)
-	}
-
-	executor := &exec.ExecutionPlan{}
-
-	err = executor.Plan(&parsedConfig.Resources, sess)
-	if err != nil {
-		errorCollecter.Add("Fatal", err.Error())
-	}
-
-	err = executor.Exec()
-	if err != nil {
-		errorCollecter.Add("Fatal", err.Error())
-	}
-
-	printError(errorCollecter)
-	os.Exit(0)
-
-	// dynamoSrv := dynamodb.New(sess)
-
-	// fmt.Println("Tables:")
-
-	// for {
-	// 	result, err := dynamoSrv.ListTablesWithContext(ctx, &dynamodb.ListTablesInput{})
-	// 	if err != nil {
-	// 		if aerr, ok := err.(awserr.Error); ok {
-	// 			switch aerr.Code() {
-	// 			case dynamodb.ErrCodeInternalServerError:
-	// 				fmt.Println(dynamodb.ErrCodeInternalServerError, aerr.Error())
-	// 			default:
-	// 				fmt.Println(aerr.Error())
-	// 			}
-	// 		} else {
-	// 			// Print the error, cast err to awserr.Error to get the Code and
-	// 			// Message from an error.
-	// 			fmt.Println(err.Error())
-	// 		}
-	// 		return
-	// 	}
-
-	// 	for _, n := range result.TableNames {
-	// 		fmt.Println(*n)
-	// 	}
-
-	// 	if result.LastEvaluatedTableName == nil {
-	// 		break
-	// 	}
-	// }
+	//sess, err := connectToAws(parsedConfig)
+	//if err != nil {
+	//	errorCollecter.Add("Fatal", err.Error())
+	//	printError(errorCollecter)
+	//	os.Exit(1)
+	//}
+	//
+	//if !checkHealthy(sess) {
+	//	errorCollecter.Add("Fatal", "Could not connect to localstack, retry limit reached")
+	//	printError(errorCollecter)
+	//	os.Exit(1)
+	//}
+	//
+	//executor := &exec.ExecutionPlan{}
+	//
+	//err = executor.Plan(&parsedConfig.Resources, sess)
+	//if err != nil {
+	//	errorCollecter.Add("Fatal", err.Error())
+	//}
+	//
+	//err = executor.Exec()
+	//if err != nil {
+	//	errorCollecter.Add("Fatal", err.Error())
+	//}
+	//
+	//printError(errorCollecter)
+	//os.Exit(0)
 }

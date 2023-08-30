@@ -5,7 +5,7 @@ import (
 	"os"
 	"strconv"
 
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 type ResourceType string
@@ -27,7 +27,7 @@ type S3Options struct {
 
 type SQSOptions struct {
 	Name       string `yaml:"name"`
-	DeadLetter bool   `yaml:"deadLetter"`
+	DeadLetter bool   `yaml:"dead_letter"`
 }
 
 type Resource struct {
@@ -40,11 +40,11 @@ type Config struct {
 	Resources  map[string]Resource `yaml:"resources"`
 }
 
-func (r *Resource) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (r *Resource) UnmarshalYAML(value *yaml.Node) error {
 	type resourceAlias Resource
 	var ra resourceAlias
 
-	if err := unmarshal(&ra); err != nil {
+	if err := value.Decode(&ra); err != nil {
 		return err
 	}
 
@@ -55,16 +55,27 @@ func (r *Resource) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		var c struct {
 			Options S3Options `yaml:"options"`
 		}
-		err := unmarshal(&c)
+
+		if err := value.Decode(&c); err != nil {
+			return err
+		}
+
+		if c.Options == (S3Options{}) {
+			return fmt.Errorf("options not provided for: %v", r.Type)
+		}
+
 		r.Options = c.Options
-		return err
 	case "sqs":
 		var c struct {
 			Options SQSOptions `yaml:"options"`
 		}
 
-		if err := unmarshal(&c); err != nil {
+		if err := value.Decode(&c); err != nil {
 			return err
+		}
+
+		if c.Options == (SQSOptions{}) {
+			return fmt.Errorf("options not provided for: %v", r.Type)
 		}
 
 		r.Options = c.Options
@@ -88,6 +99,7 @@ func ParseConfigFile(filePath string) (*Config, error) {
 
 	var config Config
 	decoder := yaml.NewDecoder(file)
+	decoder.KnownFields(true)
 	err = decoder.Decode(&config)
 	if err != nil {
 		return nil, err

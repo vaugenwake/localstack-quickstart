@@ -23,3 +23,7 @@ func (eb *ErrorsBag) Any() bool {
 func (eb *ErrorsBag) All() []Error {
 	return eb.errors
 }
+
+func (eb *ErrorsBag) Get(index int) Error {
+	return eb.errors[index]
+}

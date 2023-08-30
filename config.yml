@@ -1,19 +1,16 @@
 connection:
   protocol: http
-  endpoint: localstack
+  endpoint: localhost
   port: 4566
 
 resources:
   my-bucket:
     type: s3
+    restart: true
     options:
       name: my-bucket
-  logs-bucket:
-    type: s3
-    options:
-      name: logs-bucket
-  my-queue:
-    type: sqs
-    options:
-      name: my-queue
-      dead_letter: true
+#  my-queue:
+#    type: sqs
+#    options:
+#      name: my-queue
+#      dead_letter: true
