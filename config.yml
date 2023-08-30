@@ -8,6 +8,10 @@ resources:
     type: s3
     options:
       name: my-bucket
+  logs-bucket:
+    type: s3
+    options:
+      name: logs-bucket
   my-queue:
     type: sqs
     options:

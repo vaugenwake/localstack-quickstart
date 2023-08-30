@@ -24,7 +24,7 @@ type ExecutionPlan struct {
 	ctx   *context.Context
 }
 
-func handlerFactory(resourceType config.ResourceType, options interface{}, ctx *context.Context) (Handler, error) {
+func handlerFactory(resourceType config.ResourceType, options interface{}, sess *session.Session) (Handler, error) {
 	var handler Handler
 
 	switch resourceType {
@@ -41,7 +41,6 @@ func handlerFactory(resourceType config.ResourceType, options interface{}, ctx *
 	}
 
 	if handler != nil {
-		sess := (*ctx).Value("session").(*session.Session)
 		handler.SetSession(sess)
 		return handler, nil
 	}
@@ -53,10 +52,10 @@ func (p *ExecutionPlan) SetContext(c *context.Context) {
 	p.ctx = c
 }
 
-func (p *ExecutionPlan) Plan(resources *map[string]config.Resource) error {
+func (p *ExecutionPlan) Plan(resources *map[string]config.Resource, sess *session.Session) error {
 	// TODO: Add logic for dependency tree
 	for _, resource := range *resources {
-		handler, err := handlerFactory(resource.Type, resource.Options, p.ctx)
+		handler, err := handlerFactory(resource.Type, resource.Options, sess)
 		if err != nil {
 			return err
 		}

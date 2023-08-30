@@ -102,15 +102,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-
-	sessionCtx := context.WithValue(ctx, "session", sess)
-
 	executor := &exec.ExecutionPlan{}
-	executor.SetContext(&sessionCtx)
 
-	err = executor.Plan(&parsedConfig.Resources)
+	err = executor.Plan(&parsedConfig.Resources, sess)
 	if err != nil {
 		errorCollecter.Add("Fatal", err.Error())
 	}
