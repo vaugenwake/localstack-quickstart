@@ -19,8 +19,10 @@ import (
 
 func connectToAws(config *config.Config) (*session.Session, error) {
 	awsConfig := &aws.Config{
-		Region:   aws.String("us-east-1"),
-		Endpoint: aws.String(config.GetEndpoint()),
+		Region:           aws.String("us-east-1"),
+		Endpoint:         aws.String(config.GetEndpoint()),
+		S3ForcePathStyle: aws.Bool(true),
+		DisableSSL:       aws.Bool(true),
 	}
 
 	sess, err := session.NewSession(awsConfig)
@@ -55,6 +57,22 @@ func checkHealthy(sess *session.Session) bool {
 	return false
 }
 
+func printError(e *errors.ErrorsBag) {
+	if e.Any() {
+		t := table.NewWriter()
+		t.SetTitle("Execution Errors")
+
+		t.AppendHeader(table.Row{"#", "Level", "Error"})
+
+		for idx, err := range e.All() {
+			t.AppendRow(table.Row{idx, err.Level, err.Message})
+		}
+
+		fmt.Println(t.Render())
+		os.Exit(1)
+	}
+}
+
 func main() {
 
 	errorCollecter := &errors.ErrorsBag{}
@@ -67,9 +85,31 @@ func main() {
 	parsedConfig, err := config.ParseConfigFile(inputs.ConfigFile)
 	if err != nil {
 		errorCollecter.Add("Fatal", err.Error())
+		printError(errorCollecter)
+		os.Exit(1)
 	}
 
+	sess, err := connectToAws(parsedConfig)
+	if err != nil {
+		errorCollecter.Add("Fatal", err.Error())
+		printError(errorCollecter)
+		os.Exit(1)
+	}
+
+	if !checkHealthy(sess) {
+		errorCollecter.Add("Fatal", "Could not connect to localstack, retry limit reached")
+		printError(errorCollecter)
+		os.Exit(1)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	sessionCtx := context.WithValue(ctx, "session", sess)
+
 	executor := &exec.ExecutionPlan{}
+	executor.SetContext(&sessionCtx)
+
 	err = executor.Plan(&parsedConfig.Resources)
 	if err != nil {
 		errorCollecter.Add("Fatal", err.Error())
@@ -80,33 +120,8 @@ func main() {
 		errorCollecter.Add("Fatal", err.Error())
 	}
 
-	if errorCollecter.Any() {
-		t := table.NewWriter()
-		t.SetTitle("Execution Errors")
-
-		t.AppendHeader(table.Row{"#", "Level", "Error"})
-
-		for idx, err := range errorCollecter.All() {
-			t.AppendRow(table.Row{idx, err.Level, err.Message})
-		}
-
-		fmt.Println(t.Render())
-		os.Exit(1)
-	}
-
-	// sess, err := connectToAws(config)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	os.Exit(1)
-	// }
-
-	// if !checkHealthy(sess) {
-	// 	fmt.Println("Could not establish healthy connection to localstack service")
-	// 	os.Exit(1)
-	// }
-
-	// ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	// defer cancel()
+	printError(errorCollecter)
+	os.Exit(0)
 
 	// dynamoSrv := dynamodb.New(sess)
 

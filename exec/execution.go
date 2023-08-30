@@ -1,12 +1,16 @@
 package exec
 
 import (
+	"context"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"localstack-quickstart/config"
 	"localstack-quickstart/exec/handlers"
+	"sync"
 )
 
 type Handler interface {
+	SetSession(s *session.Session)
 	Run() error
 }
 
@@ -17,9 +21,10 @@ type ExecutionStep struct {
 
 type ExecutionPlan struct {
 	Steps []ExecutionStep
+	ctx   *context.Context
 }
 
-func handlerFactory(resourceType config.ResourceType, options interface{}) (Handler, error) {
+func handlerFactory(resourceType config.ResourceType, options interface{}, ctx *context.Context) (Handler, error) {
 	var handler Handler
 
 	switch resourceType {
@@ -36,16 +41,22 @@ func handlerFactory(resourceType config.ResourceType, options interface{}) (Hand
 	}
 
 	if handler != nil {
+		sess := (*ctx).Value("session").(*session.Session)
+		handler.SetSession(sess)
 		return handler, nil
 	}
 
 	return nil, fmt.Errorf("No handler for: '%s' resource found", resourceType)
 }
 
+func (p *ExecutionPlan) SetContext(c *context.Context) {
+	p.ctx = c
+}
+
 func (p *ExecutionPlan) Plan(resources *map[string]config.Resource) error {
 	// TODO: Add logic for dependency tree
 	for _, resource := range *resources {
-		handler, err := handlerFactory(resource.Type, resource.Options)
+		handler, err := handlerFactory(resource.Type, resource.Options, p.ctx)
 		if err != nil {
 			return err
 		}
@@ -64,12 +75,21 @@ func (p *ExecutionPlan) Exec() error {
 		return fmt.Errorf("%v execution steps provided, skipping", len(p.Steps))
 	}
 
+	var wg sync.WaitGroup
+
+	wg.Add(len(p.Steps))
+
 	for _, step := range p.Steps {
-		err := step.handler.Run()
-		if err != nil {
-			fmt.Printf("Error executing step for: '%s', Error: %v", step.Type, err.Error())
-		}
+		go func(step ExecutionStep) {
+			defer wg.Done()
+			err := step.handler.Run()
+			if err != nil {
+				fmt.Printf("Error executing step for: '%s', Error: %v", step.Type, err.Error())
+			}
+		}(step)
 	}
+
+	wg.Wait()
 
 	return nil
 }
