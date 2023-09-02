@@ -3,18 +3,16 @@ package main
 import (
 	"context"
 	"fmt"
-	"localstack-quickstart/exec"
+	"localstack-quickstart/cmd"
+	"localstack-quickstart/pkg/config"
 	"os"
 	"time"
-
-	"localstack-quickstart/config"
-	"localstack-quickstart/errors"
-	"localstack-quickstart/inputs"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/jedib0t/go-pretty/table"
+	"localstack-quickstart/errors"
 )
 
 func connectToAws(config *config.Config) (*session.Session, error) {
@@ -74,46 +72,5 @@ func printError(e *errors.ErrorsBag) {
 }
 
 func main() {
-
-	errorCollecter := &errors.ErrorsBag{}
-
-	inputs, err := inputs.ParseInputFlags()
-	if err != nil {
-		panic("Inputs failer")
-	}
-
-	parsedConfig, err := config.ParseConfigFile(inputs.ConfigFile)
-	if err != nil {
-		errorCollecter.Add("Fatal", err.Error())
-		printError(errorCollecter)
-		os.Exit(1)
-	}
-
-	sess, err := connectToAws(parsedConfig)
-	if err != nil {
-		errorCollecter.Add("Fatal", err.Error())
-		printError(errorCollecter)
-		os.Exit(1)
-	}
-
-	if !checkHealthy(sess) {
-		errorCollecter.Add("Fatal", "Could not connect to localstack, retry limit reached")
-		printError(errorCollecter)
-		os.Exit(1)
-	}
-
-	executor := &exec.ExecutionPlan{}
-
-	err = executor.Plan(&parsedConfig.Resources, sess)
-	if err != nil {
-		errorCollecter.Add("Fatal", err.Error())
-	}
-
-	err = executor.Exec()
-	if err != nil {
-		errorCollecter.Add("Fatal", err.Error())
-	}
-
-	printError(errorCollecter)
-	os.Exit(0)
+	cmd.Execute()
 }

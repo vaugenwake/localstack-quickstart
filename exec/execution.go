@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws/session"
-	"localstack-quickstart/config"
 	"localstack-quickstart/exec/handlers"
+	"localstack-quickstart/pkg/config"
 	"sync"
 )
 

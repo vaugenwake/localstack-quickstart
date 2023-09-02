@@ -5,7 +5,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	"localstack-quickstart/config"
+	"localstack-quickstart/pkg/config"
 )
 
 type SQSHandler struct {
