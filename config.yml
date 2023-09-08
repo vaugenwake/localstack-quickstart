@@ -14,4 +14,5 @@ resources:
     type: sqs
     options:
       name: my-queue
-      dead_letter: true
+      messageRetentionPeriod: "345600" # 4 days (seconds)
+      visibilityTimeout: "30" # 30 seconds

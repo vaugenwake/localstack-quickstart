@@ -24,8 +24,9 @@ func TestCanParseConfig(t *testing.T) {
 		"my-queue": {
 			Type: SQS,
 			Options: SQSOptions{
-				Name:       "test-queue",
-				DeadLetter: false,
+				Name:                   "test-queue",
+				MessageRetentionPeriod: "1",
+				VisibilityTimeout:      "30",
 			},
 		},
 	}

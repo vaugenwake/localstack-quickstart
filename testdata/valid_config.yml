@@ -12,4 +12,5 @@ resources:
     type: sqs
     options:
       name: test-queue
-      dead_letter: false
+      messageRetentionPeriod: "1"
+      visibilityTimeout: "30"

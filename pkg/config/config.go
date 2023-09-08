@@ -27,8 +27,9 @@ type S3Options struct {
 }
 
 type SQSOptions struct {
-	Name       string `yaml:"name"`
-	DeadLetter bool   `yaml:"dead_letter"`
+	Name                   string `yaml:"name"`
+	MessageRetentionPeriod string `yaml:"messageRetentionPeriod"`
+	VisibilityTimeout      string `yaml:"visibilityTimeout"`
 }
 
 type Resource struct {

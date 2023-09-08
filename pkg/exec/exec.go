@@ -9,10 +9,12 @@ import (
 	"sync"
 
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/sqs"
 )
 
 type Handler interface {
-	SetSession(s *session.Session)
+	// SetSession(s *session.Session)
 	Run() error
 }
 
@@ -32,22 +34,25 @@ func handlerFactory(resourceType config.ResourceType, options interface{}, sess 
 	switch resourceType {
 	case config.S3:
 		if s3Opts, ok := options.(config.S3Options); ok {
-			handler = &handlers.S3Handler{Options: s3Opts}
+			handler = &handlers.S3Handler{
+				Options: s3Opts,
+				Service: s3.New(sess),
+			}
 		}
 	case config.SQS:
 		if sqsOpts, ok := options.(config.SQSOptions); ok {
 			handler = &handlers.SQSHandler{
 				Options: sqsOpts,
+				Service: sqs.New(sess),
 			}
 		}
 	}
 
 	if handler != nil {
-		handler.SetSession(sess)
 		return handler, nil
 	}
 
-	return nil, fmt.Errorf("No handler for: '%s' resource found", resourceType)
+	return nil, fmt.Errorf("no handler for: '%s' resource found", resourceType)
 }
 
 func (p *ExecutionPlan) SetContext(c *context.Context) {
