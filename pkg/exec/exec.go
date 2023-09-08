@@ -3,10 +3,12 @@ package exec
 import (
 	"context"
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"localstack-quickstart/config"
-	"localstack-quickstart/exec/handlers"
+	"localstack-quickstart/pkg/config"
+	"localstack-quickstart/pkg/errors"
+	"localstack-quickstart/pkg/exec/handlers"
 	"sync"
+
+	"github.com/aws/aws-sdk-go/aws/session"
 )
 
 type Handler interface {
@@ -69,7 +71,7 @@ func (p *ExecutionPlan) Plan(resources *map[string]config.Resource, sess *sessio
 	return nil
 }
 
-func (p *ExecutionPlan) Exec() error {
+func (p *ExecutionPlan) Exec(err *errors.ErrorsBag) error {
 	if len(p.Steps) < 0 {
 		return fmt.Errorf("%v execution steps provided, skipping", len(p.Steps))
 	}

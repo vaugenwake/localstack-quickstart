@@ -8,7 +8,7 @@ import (
 )
 
 func getStubPath(stub_name string) string {
-	return filepath.Join("../testdata", stub_name)
+	return filepath.Join("../../testdata", stub_name)
 }
 
 func TestCanParseConfig(t *testing.T) {
@@ -94,7 +94,7 @@ func TestCanBuildEndpoint(t *testing.T) {
 		t.Errorf("Unexpected error: %v", err)
 	}
 
-	assert.Equal("http://localstack-test:4566", result.GetEndpoint())
+	assert.Equal("http://localstack-test:4566", result.Connection.GetEndpoint())
 }
 
 func TestCanMarshalOptionsTypeForResource(t *testing.T) {

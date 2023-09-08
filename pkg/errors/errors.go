@@ -1,5 +1,12 @@
 package errors
 
+import (
+	"fmt"
+	"os"
+
+	"github.com/jedib0t/go-pretty/table"
+)
+
 type Error struct {
 	Level   string
 	Message string
@@ -26,4 +33,20 @@ func (eb *ErrorsBag) All() []Error {
 
 func (eb *ErrorsBag) Get(index int) Error {
 	return eb.errors[index]
+}
+
+func (eb *ErrorsBag) PrintErrors() {
+	if eb.Any() {
+		t := table.NewWriter()
+		t.SetTitle("Execution Errors")
+
+		t.AppendHeader(table.Row{"#", "Level", "Error"})
+
+		for idx, err := range eb.All() {
+			t.AppendRow(table.Row{idx, err.Level, err.Message})
+		}
+
+		fmt.Println(t.Render())
+		os.Exit(1)
+	}
 }
