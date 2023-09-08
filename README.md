@@ -15,23 +15,20 @@ connection:
   protocol: http
   endpoint: localstack
   port: 4566
+  region: us-east-1 #localstack default
 
 resources:
   my-bucket:
     type: s3
+    restart: true
     options:
-      name: my-app-bucket
+      name: my-bucket
   my-queue:
     type: sqs
     options:
-      name: queue-name
-      dead_letter: my-queue-dlq
-      depends_on:
-        - my-queue-dlq
-  my-queue-dlq:
-    type: sqs
-    options:
-      name: dlq-name
+      name: my-queue
+      messageRetentionPeriod: "345600" # 4 days (seconds)
+      visibilityTimeout: "30" # 30 seconds
 ```
 
 ### Adding to your docker environment
