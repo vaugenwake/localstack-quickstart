@@ -2,61 +2,56 @@ package cmd
 
 import (
 	"fmt"
-	"github.com/spf13/cobra"
-	"localstack-quickstart/errors"
+	"localstack-quickstart/pkg/client"
 	"localstack-quickstart/pkg/config"
-	"os"
+	"localstack-quickstart/pkg/errors"
+	"localstack-quickstart/pkg/exec"
+
+	"github.com/spf13/cobra"
 )
 
 var initCmd = &cobra.Command{
 	Use:   "init",
 	Short: "initialize and setup application with config",
-	Run: func(cmd *cobra.Command, args []string) {
-		errorCollecter := &errors.ErrorsBag{}
-
-		var configFile string
-		if cmd.Flag("config").Value.String() != "" {
-			configFile = cmd.Flag("config").Value.String()
-		} else {
-			configFile = "config.yml"
+	RunE: func(cmd *cobra.Command, args []string) error {
+		configFile, err := cmd.Flags().GetString("config")
+		if err != nil {
+			return fmt.Errorf("--config= parameter not provided")
 		}
 
 		parsedConfig, err := config.ParseConfigFile(configFile)
 		if err != nil {
-			errorCollecter.Add("Fatal", err.Error())
-			//printError(errorCollecter)
-			os.Exit(1)
+			return fmt.Errorf("could not parse config file: %v, error: %v", configFile, err.Error())
 		}
 
-		fmt.Println(parsedConfig)
+		client := client.Client{
+			Connection: &parsedConfig.Connection,
+		}
 
-		//sess, err := connectToAws(parsedConfig)
-		//if err != nil {
-		//	errorCollecter.Add("Fatal", err.Error())
-		//	printError(errorCollecter)
-		//	os.Exit(1)
-		//}
-		//
-		//if !checkHealthy(sess) {
-		//	errorCollecter.Add("Fatal", "Could not connect to localstack, retry limit reached")
-		//	printError(errorCollecter)
-		//	os.Exit(1)
-		//}
-		//
-		//executor := &exec.ExecutionPlan{}
-		//
-		//err = executor.Plan(&parsedConfig.Resources, sess)
-		//if err != nil {
-		//	errorCollecter.Add("Fatal", err.Error())
-		//}
-		//
-		//err = executor.Exec()
-		//if err != nil {
-		//	errorCollecter.Add("Fatal", err.Error())
-		//}
-		//
-		//printError(errorCollecter)
-		//os.Exit(0)
+		sess, err := client.Connect()
+		if err != nil {
+			return fmt.Errorf("error estabilishing session: %v", err.Error())
+		}
+
+		if !client.HealthCheck(sess) {
+			return fmt.Errorf("could not connect, retry limit reached")
+		}
+
+		errorCollector := errors.ErrorsBag{}
+
+		executor := &exec.ExecutionPlan{}
+
+		err = executor.Plan(&parsedConfig.Resources, sess)
+		if err != nil {
+			return fmt.Errorf("could not create execution plan, %v", err.Error())
+		}
+
+		err = executor.Exec(&errorCollector)
+		if err != nil {
+			return fmt.Errorf("error running execution plan, %v", err.Error())
+		}
+
+		return nil
 	},
 }
 

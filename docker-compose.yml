@@ -16,7 +16,7 @@ services:
       - AWS_REGION=us-east-1
     volumes:
       - ./config.yml:/app/config.yml
-    entrypoint: ["/localstack-quickstart", "-config=config.yml"]
+    entrypoint: ["/localstack-quickstart", "init", "--config=config.yml"]
     networks:
       - localstack
   localstack:

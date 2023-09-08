@@ -86,8 +86,8 @@ func (r *Resource) UnmarshalYAML(value *yaml.Node) error {
 	return nil
 }
 
-func (c *Config) GetEndpoint() string {
-	return c.Connection.Protocol + "://" + c.Connection.Endpoint + ":" + strconv.Itoa(c.Connection.Port)
+func (c *Connection) GetEndpoint() string {
+	return c.Protocol + "://" + c.Endpoint + ":" + strconv.Itoa(c.Port)
 }
 
 func ParseConfigFile(filePath string) (*Config, error) {
