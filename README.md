@@ -75,7 +75,7 @@ services:
 
 ### Initialize resources
 ```BASH
-docker-compose run --rm app
+docker-compose run --rm app init --config=config.yml
 ```
 
 ## Todo:
