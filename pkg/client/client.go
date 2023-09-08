@@ -11,13 +11,18 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
+var (
+	RETRY_LIMIT    = 3
+	RETRY_INTERVAL = 5
+)
+
 type Client struct {
 	Connection *config.Connection
 }
 
-func (c *Client) Connect() (*session.Session, error) {
+func (c *Client) InitSession() (*session.Session, error) {
 	awsConfig := &aws.Config{
-		Region:           aws.String("us-east-1"),
+		Region:           aws.String(c.Connection.Region),
 		Endpoint:         aws.String(c.Connection.GetEndpoint()),
 		S3ForcePathStyle: aws.Bool(true),
 		DisableSSL:       aws.Bool(true),
@@ -31,14 +36,14 @@ func (c *Client) Connect() (*session.Session, error) {
 	return sess, nil
 }
 
-func (c *Client) HealthCheck(sess *session.Session) bool {
-	retries := 3
-	retryInterval := 5 * time.Second
+func (c *Client) HealthCheck(ctx *context.Context, sess *session.Session) bool {
+	retries := RETRY_LIMIT
+	retryInterval := time.Duration(RETRY_INTERVAL) * time.Second
 
 	s3Client := s3.New(sess)
 
 	for i := 0; i < retries; i++ {
-		_, err := s3Client.ListBucketsWithContext(context.Background(), &s3.ListBucketsInput{})
+		_, err := s3Client.ListBucketsWithContext(*ctx, &s3.ListBucketsInput{})
 		if err == nil {
 			return true
 		}

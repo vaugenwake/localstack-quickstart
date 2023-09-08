@@ -19,6 +19,7 @@ type Connection struct {
 	Protocol string `yaml:"protocol"`
 	Endpoint string `yaml:"endpoint"`
 	Port     int    `yaml:"port"`
+	Region   string `yaml:"region"`
 }
 
 type S3Options struct {

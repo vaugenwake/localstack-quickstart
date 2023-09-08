@@ -1,11 +1,13 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"localstack-quickstart/pkg/client"
 	"localstack-quickstart/pkg/config"
 	"localstack-quickstart/pkg/errors"
 	"localstack-quickstart/pkg/exec"
+	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -28,12 +30,15 @@ var initCmd = &cobra.Command{
 			Connection: &parsedConfig.Connection,
 		}
 
-		sess, err := client.Connect()
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+
+		sess, err := client.InitSession()
 		if err != nil {
 			return fmt.Errorf("error estabilishing session: %v", err.Error())
 		}
 
-		if !client.HealthCheck(sess) {
+		if !client.HealthCheck(&ctx, sess) {
 			return fmt.Errorf("could not connect, retry limit reached")
 		}
 

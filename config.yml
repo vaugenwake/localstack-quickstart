@@ -1,7 +1,8 @@
 connection:
   protocol: http
-  endpoint: localhost
+  endpoint: localstack
   port: 4566
+  region: us-east-1 #localstack default
 
 resources:
   my-bucket:
@@ -9,8 +10,8 @@ resources:
     restart: true
     options:
       name: my-bucket
-#  my-queue:
-#    type: sqs
-#    options:
-#      name: my-queue
-#      dead_letter: true
+  my-queue:
+    type: sqs
+    options:
+      name: my-queue
+      dead_letter: true
